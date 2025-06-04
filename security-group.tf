@@ -1,4 +1,3 @@
-
 # Security Group 
 
 resource "aws_security_group" "public_security_group" {
