@@ -71,6 +71,53 @@ resource "aws_security_group" "public_security_group" {
   }
 }
 
+resource "aws_security_group" "load_balancer_security_group" {
+  name = "load_balancer_security_group"
+  vpc_id =  aws_vpc.app.id
+}
+
+# load balancer
+resource "aws_lb" "nginx_lb" {
+  name = "prog8830-lb-tf"
+  internal = false
+  load_balancer_type = "application"
+
+  security_groups = [ aws_security_group.load_balancer_security_group.id ]
+  subnets = [ aws_subnet.public_subnet.id ]
+
+  tags = {
+     Name = "PROG8830_LB"
+   
+  }
+  
+}
+
+
+# aws_lb_listener
+resource "aws_lb_listener" "front-end" {
+ load_balancer_arn = aws_lb.nginx_lb.arn
+ port = 80
+ protocol = "HTTP"
+ 
+  default_action {
+    type = "forward"
+    target_group_arn = aws_lb_target_group.nginx_target_group.arn
+  }
+}
+
+
+
+# aws_lb_target_group_attachment
+resource "aws_lb_target_group_attachment" "name" {
+  target_group_arn = aws_lb_target_group.nginx_target_group.arn
+  target_id = aws_instance.nginx1.id
+  port = 80
+}
+
+
+
+
+
 
 # INSTANCES
 resource "aws_instance" "nginx1" {
